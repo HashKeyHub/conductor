@@ -14,8 +14,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-dept: 0
     - name: Build the Docker image
       run: |
-        git fetch origin +refs/tags/*:refs/tags/*
+        git fetch --depth=1 origin +refs/tags/*:refs/tags/*
         git_hash=$(git rev-parse --short "$GITHUB_SHA")
         docker build . --file docker/server/Dockerfile --tag hashkeyhub/conductor-server:$git_hash
