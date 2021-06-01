@@ -27,6 +27,13 @@ public interface ElasticSearchConfiguration extends Configuration {
     String ELASTIC_SEARCH_URL_PROPERTY_NAME = "workflow.elasticsearch.url";
     String ELASTIC_SEARCH_URL_DEFAULT_VALUE = "localhost:9300";
 
+    String ELASTIC_SEARCH_USERNAME_PROPERTY_NAME = "workflow.elasticsearch.username";
+    String ELASTIC_SEARCH_USERNAME_DEFAULT_VALUE = "elastic";
+
+    String ELASTIC_SEARCH_PASSWORD_PROPERTY_NAME = "workflow.elasticsearch.password";
+    String ELASTIC_SEARCH_PASSWORD_DEFAULT_VALUE = "elastic";
+
+
     String ELASTIC_SEARCH_HEALTH_COLOR_PROPERTY_NAME = "workflow.elasticsearch.cluster.health.color";
     String ELASTIC_SEARCH_HEALTH_COLOR_DEFAULT_VALUE = "green";
 
@@ -92,6 +99,14 @@ public interface ElasticSearchConfiguration extends Configuration {
             (host.startsWith("http://") || host.startsWith("https://") || host.startsWith("tcp://")) ? URI.create(host)
                 : URI.create("tcp://" + host)
         ).collect(Collectors.toList());
+    }
+
+    default String getUsername() {
+        return getProperty(ELASTIC_SEARCH_USERNAME_PROPERTY_NAME, ELASTIC_SEARCH_USERNAME_DEFAULT_VALUE);
+    }
+
+    default String getPassword() {
+        return getProperty(ELASTIC_SEARCH_PASSWORD_PROPERTY_NAME, ELASTIC_SEARCH_PASSWORD_DEFAULT_VALUE);
     }
 
     default String getIndexName() {

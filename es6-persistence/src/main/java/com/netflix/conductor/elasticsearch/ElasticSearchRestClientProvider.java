@@ -13,7 +13,13 @@
 package com.netflix.conductor.elasticsearch;
 
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -32,7 +38,19 @@ public class ElasticSearchRestClientProvider implements Provider<RestClient> {
 
     @Override
     public RestClient get() {
-        return RestClient.builder(convertToHttpHosts(configuration.getURIs())).build();
+        final CredentialsProvider credentialsProvider =
+                new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY,
+                new UsernamePasswordCredentials(configuration.getUsername(), configuration.getPassword()));
+
+        return RestClient.builder(convertToHttpHosts(configuration.getURIs()))
+                .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                    @Override
+                    public HttpAsyncClientBuilder customizeHttpClient(
+                            HttpAsyncClientBuilder httpClientBuilder) {
+                        return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    }
+                }).build();
     }
 
     private HttpHost[] convertToHttpHosts(List<URI> hosts) {

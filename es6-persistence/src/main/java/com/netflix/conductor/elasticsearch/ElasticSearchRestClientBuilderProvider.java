@@ -12,14 +12,20 @@
  */
 package com.netflix.conductor.elasticsearch;
 
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
 
 public class ElasticSearchRestClientBuilderProvider implements Provider<RestClientBuilder> {
     private final ElasticSearchConfiguration configuration;
@@ -31,7 +37,19 @@ public class ElasticSearchRestClientBuilderProvider implements Provider<RestClie
 
     @Override
     public RestClientBuilder get() {
-        return RestClient.builder(convertToHttpHosts(configuration.getURIs()));
+        final CredentialsProvider credentialsProvider =
+                new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY,
+                new UsernamePasswordCredentials(configuration.getUsername(), configuration.getPassword()));
+
+        return RestClient.builder(convertToHttpHosts(configuration.getURIs()))
+                .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                    @Override
+                    public HttpAsyncClientBuilder customizeHttpClient(
+                            HttpAsyncClientBuilder httpClientBuilder) {
+                        return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    }
+                });
     }
 
     private HttpHost[] convertToHttpHosts(List<URI> hosts) {
